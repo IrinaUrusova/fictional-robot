@@ -7,9 +7,9 @@ http.createServer(async (req, res) => {
 if (req.url === '/db-check') {
 try {
 const client = new Client({
-connectionString: process.env.DATABASE_URL,
-ssl: { rejectUnauthorized: false }
+connectionString: process.env.DATABASE_URL
 });
+
 await client.connect();
 const q = await client.query('select now() as time');
 await client.end();
