@@ -20,3 +20,11 @@ priority text not null default 'medium',
 due_at timestamptz null,
 created_at timestamptz not null default now()
 );
+create table if not exists messages (
+id uuid primary key,
+company_id uuid not null references companies(id),
+user_id uuid null references users(id),
+role text not null, -- user/agent/system
+content text not null,
+created_at timestamptz not null default now()
+);
