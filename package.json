@@ -1,8 +1,11 @@
 {
-  "name": "fictional-robot",
-  "version": "1.0.0",
-  "private": true,
-  "scripts": {
-    "start": "node server.js"
-  }
+"name": "fictional-robot",
+"version": "1.0.0",
+"private": true,
+"scripts": {
+"start": "node server.js"
+},
+"dependencies": {
+"pg": "^8.12.0"
+}
 }
