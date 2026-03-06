@@ -28,3 +28,12 @@ role text not null, -- user/agent/system
 content text not null,
 created_at timestamptz not null default now()
 );
+create table if not exists reports (
+id uuid primary key,
+company_id uuid not null references companies(id),
+report_date date not null,
+summary text not null,
+risks text not null default '',
+actions text not null default '',
+created_at timestamptz not null default now()
+);
