@@ -25,5 +25,31 @@ return res.end(JSON.stringify({ ok: false, error: String(e), message: e?.message
 }
 
 res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+if (req.url === '/tables-check') {
+try {
+const client = new Client({ connectionString: process.env.DATABASE_URL });
+await client.connect();
+
+const q = await client.query(`
+select table_name
+from information_schema.tables
+where table_schema = 'public'
+and table_name in ('companies','users','tasks','messages','reports')
+order by table_name;
+`);
+
+await client.end();
+
+res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+return res.end(JSON.stringify({
+ok: true,
+tables: q.rows.map(r => r.table_name)
+}));
+} catch (e) {
+res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+return res.end(JSON.stringify({ ok: false, error: String(e) }));
+}
+}
+  
 return res.end('OK: app is running');
 }).listen(port);
