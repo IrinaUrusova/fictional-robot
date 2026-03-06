@@ -28,5 +28,10 @@ message: e?.message || null
 }
 
 res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+if (req.url === '/health') {
+res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+return res.end(JSON.stringify({ ok: true, service: 'api' }));
+}
+  
 res.end('OK: app is running');
 }).listen(port);
