@@ -18,8 +18,13 @@ res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
 return res.end(JSON.stringify({ ok: true, dbTime: q.rows[0].time }));
 } catch (e) {
 res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
-return res.end(JSON.stringify({ ok: false, error: e.message }));
+return res.end(JSON.stringify({
+ok: false,
+error: String(e),
+message: e?.message || null
+}));
 }
+
 }
 
 res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
