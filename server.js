@@ -11,7 +11,6 @@ req.on('end', () => resolve(data));
 req.on('error', reject);
 });
 }
-
 http.createServer(async (req, res) => {
 if (req.url === '/health') {
 res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -84,6 +83,39 @@ values (gen_random_uuid(), $1, $2, $3, $4, $5, now())
 returning id, company_id, title, status, priority, due_at, created_at
 `,
 [company_id, title, status, priority, due_at]
+);
+
+await client.end();
+
+res.writeHead(201, { 'Content-Type': 'application/json; charset=utf-8' });
+return res.end(JSON.stringify({ ok: true, item: q.rows[0] }));
+} catch (e) {
+res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+return res.end(JSON.stringify({ ok: false, error: String(e), message: e?.message || null }));
+}
+}
+
+if (req.url === '/companies' && req.method === 'POST') {
+try {
+const raw = await readBody(req);
+const body = raw ? JSON.parse(raw) : {};
+
+const name = body.name;
+if (!name) {
+res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+return res.end(JSON.stringify({ ok: false, error: 'name is required' }));
+}
+
+const client = new Client({ connectionString: process.env.DATABASE_URL });
+await client.connect();
+
+const q = await client.query(
+`
+insert into companies (id, name, created_at)
+values (gen_random_uuid(), $1, now())
+returning id, name, created_at
+`,
+[name]
 );
 
 await client.end();
