@@ -11,6 +11,7 @@ req.on('end', () => resolve(data));
 req.on('error', reject);
 });
 }
+
 http.createServer(async (req, res) => {
 if (req.url === '/health') {
 res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -59,7 +60,7 @@ try {
 const raw = await readBody(req);
 const body = raw ? JSON.parse(raw) : {};
 
-const company_id = body.company_id;
+const company_id = String(body.company_id || '').replace(/["\\]/g, '');
 const title = body.title;
 const status = body.status || 'new';
 const priority = body.priority || 'medium';
@@ -67,10 +68,7 @@ const due_at = body.due_at || null;
 
 if (!company_id || !title) {
 res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
-return res.end(JSON.stringify({
-ok: false,
-error: 'company_id and title are required'
-}));
+return res.end(JSON.stringify({ ok: false, error: 'company_id and title are required' }));
 }
 
 const client = new Client({ connectionString: process.env.DATABASE_URL });
@@ -79,7 +77,7 @@ await client.connect();
 const q = await client.query(
 `
 insert into tasks (id, company_id, title, status, priority, due_at, created_at)
-values (gen_random_uuid(), $1, $2, $3, $4, $5, now())
+values (gen_random_uuid(), $1::uuid, $2, $3, $4, $5, now())
 returning id, company_id, title, status, priority, due_at, created_at
 `,
 [company_id, title, status, priority, due_at]
@@ -149,6 +147,7 @@ res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
 return res.end(JSON.stringify({ ok: false, error: String(e), message: e?.message || null }));
 }
 }
+
 if (req.url === '/messages' && req.method === 'POST') {
 try {
 const raw = await readBody(req);
@@ -189,4 +188,5 @@ return res.end(JSON.stringify({ ok: false, error: String(e), message: e?.message
 res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
 return res.end('OK: app is running');
 }).listen(port);
+
 
