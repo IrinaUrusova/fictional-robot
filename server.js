@@ -170,7 +170,8 @@ await client.connect();
 const q = await client.query(
 `
 insert into messages (id, company_id, user_id, role, content, created_at)
-values (gen_random_uuid(), replace($1, '"', '')::uuid, $2, $3, $4, now())
+values (gen_random_uuid(), replace(replace($1, E'\\', ''), '"', '')::uuid, $2, $3, $4, now())
+
 returning id, company_id, user_id, role, content, created_at
 `,
 [
