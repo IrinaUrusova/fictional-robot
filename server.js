@@ -24,7 +24,6 @@ return res.end(JSON.stringify({ ok: false, error: String(e), message: e?.message
 }
 }
 
-res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
 if (req.url === '/tasks' && req.method === 'GET') {
 try {
 const client = new Client({ connectionString: process.env.DATABASE_URL });
@@ -43,9 +42,11 @@ res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
 return res.end(JSON.stringify({ ok: true, items: q.rows }));
 } catch (e) {
 res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
-return res.end(JSON.stringify({ ok: false, error: String(e) }));
+return res.end(JSON.stringify({ ok: false, error: String(e), message: e?.message || null }));
 }
 }
 
+res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
 return res.end('OK: app is running');
 }).listen(port);
+
