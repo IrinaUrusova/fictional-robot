@@ -149,6 +149,42 @@ res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
 return res.end(JSON.stringify({ ok: false, error: String(e), message: e?.message || null }));
 }
 }
+if (req.url === '/messages' && req.method === 'POST') {
+try {
+const raw = await readBody(req);
+const body = raw ? JSON.parse(raw) : {};
+
+const company_id = body.company_id;
+const user_id = body.user_id || null;
+const role = body.role || 'user';
+const content = body.content;
+
+if (!company_id || !content) {
+res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+return res.end(JSON.stringify({ ok: false, error: 'company_id and content are required' }));
+}
+
+const client = new Client({ connectionString: process.env.DATABASE_URL });
+await client.connect();
+
+const q = await client.query(
+`
+insert into messages (id, company_id, user_id, role, content, created_at)
+values (gen_random_uuid(), $1, $2, $3, $4, now())
+returning id, company_id, user_id, role, content, created_at
+`,
+[company_id, user_id, role, content]
+);
+
+await client.end();
+
+res.writeHead(201, { 'Content-Type': 'application/json; charset=utf-8' });
+return res.end(JSON.stringify({ ok: true, item: q.rows[0] }));
+} catch (e) {
+res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+return res.end(JSON.stringify({ ok: false, error: String(e), message: e?.message || null }));
+}
+}
 
 res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
 return res.end('OK: app is running');
