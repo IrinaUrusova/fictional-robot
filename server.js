@@ -154,8 +154,8 @@ try {
 const raw = await readBody(req);
 const body = raw ? JSON.parse(raw) : {};
 
-const company_id = body.company_id;
-const user_id = body.user_id || null;
+const company_id = String(body.company_id || '').replace(/^"+|"+$/g, '');
+const user_id = body.user_id ? String(body.user_id).replace(/^"+|"+$/g, '') : null;
 const role = body.role || 'user';
 const content = body.content;
 
