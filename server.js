@@ -173,7 +173,12 @@ insert into messages (id, company_id, user_id, role, content, created_at)
 values (gen_random_uuid(), $1, $2, $3, $4, now())
 returning id, company_id, user_id, role, content, created_at
 `,
-[company_id, user_id, role, content]
+[
+String(company_id).replace(/"/g, ''),
+user_id ? String(user_id).replace(/"/g, '') : null,
+role,
+content
+]
 );
 
 await client.end();
