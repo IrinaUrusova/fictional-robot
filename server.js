@@ -25,5 +25,27 @@ return res.end(JSON.stringify({ ok: false, error: String(e), message: e?.message
 }
 
 res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+if (req.url === '/tasks' && req.method === 'GET') {
+try {
+const client = new Client({ connectionString: process.env.DATABASE_URL });
+await client.connect();
+
+const q = await client.query(`
+select id, company_id, title, status, priority, due_at, created_at
+from tasks
+order by created_at desc
+limit 100
+`);
+
+await client.end();
+
+res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+return res.end(JSON.stringify({ ok: true, items: q.rows }));
+} catch (e) {
+res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+return res.end(JSON.stringify({ ok: false, error: String(e) }));
+}
+}
+
 return res.end('OK: app is running');
 }).listen(port);
