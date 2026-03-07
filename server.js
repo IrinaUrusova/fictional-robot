@@ -128,7 +128,6 @@ return res.end(JSON.stringify({ ok: false, error: String(e), message: e?.message
 }
 }
 
-res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
 if (req.url === '/messages' && req.method === 'GET') {
 try {
 const client = new Client({ connectionString: process.env.DATABASE_URL });
@@ -151,6 +150,7 @@ return res.end(JSON.stringify({ ok: false, error: String(e), message: e?.message
 }
 }
 
+res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
 return res.end('OK: app is running');
 }).listen(port);
 
