@@ -154,8 +154,8 @@ try {
 const raw = await readBody(req);
 const body = raw ? JSON.parse(raw) : {};
 
-const company_id = String(body.company_id || '').replace(/^"+|"+$/g, '');
-const user_id = body.user_id ? String(body.user_id).replace(/^"+|"+$/g, '') : null;
+const company_id = String(body.company_id || '').replace(/["\\]/g, '');
+const user_id = body.user_id ? String(body.user_id).replace(/["\\]/g, '') : null;
 const role = body.role || 'user';
 const content = body.content;
 
@@ -170,16 +170,10 @@ await client.connect();
 const q = await client.query(
 `
 insert into messages (id, company_id, user_id, role, content, created_at)
-values (gen_random_uuid(), replace(replace($1, E'\\', ''), '"', '')::uuid, $2, $3, $4, now())
-
+values (gen_random_uuid(), $1::uuid, $2::uuid, $3, $4, now())
 returning id, company_id, user_id, role, content, created_at
 `,
-[
-String(company_id).replace(/"/g, ''),
-user_id ? String(user_id).replace(/"/g, '') : null,
-role,
-content
-]
+[company_id, user_id, role, content]
 );
 
 await client.end();
