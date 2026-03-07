@@ -3,6 +3,15 @@ const { Client } = require('pg');
 
 const port = process.env.PORT || 3000;
 
+function readBody(req) {
+return new Promise((resolve, reject) => {
+let data = '';
+req.on('data', chunk => (data += chunk));
+req.on('end', () => resolve(data));
+req.on('error', reject);
+});
+}
+
 http.createServer(async (req, res) => {
 if (req.url === '/health') {
 res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -40,6 +49,47 @@ await client.end();
 
 res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
 return res.end(JSON.stringify({ ok: true, items: q.rows }));
+} catch (e) {
+res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+return res.end(JSON.stringify({ ok: false, error: String(e), message: e?.message || null }));
+}
+}
+
+if (req.url === '/tasks' && req.method === 'POST') {
+try {
+const raw = await readBody(req);
+const body = raw ? JSON.parse(raw) : {};
+
+const company_id = body.company_id;
+const title = body.title;
+const status = body.status || 'new';
+const priority = body.priority || 'medium';
+const due_at = body.due_at || null;
+
+if (!company_id || !title) {
+res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+return res.end(JSON.stringify({
+ok: false,
+error: 'company_id and title are required'
+}));
+}
+
+const client = new Client({ connectionString: process.env.DATABASE_URL });
+await client.connect();
+
+const q = await client.query(
+`
+insert into tasks (id, company_id, title, status, priority, due_at, created_at)
+values (gen_random_uuid(), $1, $2, $3, $4, $5, now())
+returning id, company_id, title, status, priority, due_at, created_at
+`,
+[company_id, title, status, priority, due_at]
+);
+
+await client.end();
+
+res.writeHead(201, { 'Content-Type': 'application/json; charset=utf-8' });
+return res.end(JSON.stringify({ ok: true, item: q.rows[0] }));
 } catch (e) {
 res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
 return res.end(JSON.stringify({ ok: false, error: String(e), message: e?.message || null }));
